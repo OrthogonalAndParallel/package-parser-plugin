@@ -1,0 +1,30 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>com.yonyou.projectmanager</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>项目治理助手</name>
+    <version>1.0</version>
+    <vendor url="https://www.yonyoucloud.com">jinchenj</vendor>
+    <description><![CDATA[
+        该插件用于项目管理，功能清单：
+        1、方法设计助手：检查未设计方法清单。
+        2、失效方法治理：去除无效代码，提高代码质量，减少代码维护成本。
+    ]]></description>
+    <change-notes><![CDATA[
+        20250610: 增加失效方法治理功能。
+    ]]></change-notes>
+    <idea-version since-build="182" until-build="251.*"/>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.java</depends>
+    <extensions defaultExtensionNs="com.intellij">
+    </extensions>
+    <actions>
+        <group id="PackageParser.Group" text="项目治理助手" description="项目治理助手下拉菜单" class="com.yonyou.action.PackageParserActionGroup" popup="true">
+            <action id="PackageParser.MethodDesign" class="com.yonyou.action.MethodDesignAction" text="方法设计助手"/>
+            <action id="PackageParser.UnusedMethodCleanup" class="com.yonyou.action.UnusedMethodCleanupAction" text="失效方法治理"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </group>
+    </actions>
+</idea-plugin>
