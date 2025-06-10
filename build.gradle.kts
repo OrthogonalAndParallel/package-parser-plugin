@@ -38,8 +38,8 @@ dependencies {
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            sinceBuild = "0.0"      // 表示不限制最低版本
-            untilBuild = "9999.99"  // 表示不限制最高版本
+            sinceBuild = "182"      // 表示不限制最低版本
+            untilBuild = "251.*"  // 表示不限制最高版本
         }
         changeNotes = """
       Initial version
@@ -48,7 +48,7 @@ intellijPlatform {
 }
 
 tasks {
-    buildSearchableOptions {
+    withType<org.jetbrains.intellij.platform.gradle.tasks.PrepareJarSearchableOptionsTask>().configureEach {
         enabled = false
     }
     jar {

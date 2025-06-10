@@ -8,6 +8,9 @@
     <version>1.0</version>
     <vendor url="https://www.yonyoucloud.com">jinchenj</vendor>
     <description><![CDATA[
+        This plugin is used for project management. Function list:
+        1. Method Design Assistant: Check the list of methods that have not been designed.
+        2. Failure method governance: Remove invalid code, improve code quality, and reduce code maintenance costs.
         该插件用于项目管理，功能清单：
         1、方法设计助手：检查未设计方法清单。
         2、失效方法治理：去除无效代码，提高代码质量，减少代码维护成本。

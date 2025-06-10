@@ -6,6 +6,7 @@ import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
@@ -52,7 +53,6 @@ public class ProjectMethodManager {
 
                                     // 使用 invokeLater 在 EDT 中更新 UI
                                     SwingUtilities.invokeLater(() -> {
-                                        System.out.println("正在更新UI：" + classMethodName);
                                         methodInputArea.append(classMethodName + "\n");
                                         methodInputArea.setCaretPosition(methodInputArea.getDocument().getLength());
                                     });
@@ -66,12 +66,13 @@ public class ProjectMethodManager {
                                 }
 
                             } catch (Exception e) {
+                                Messages.showErrorDialog("获取失效方法失败：" + e.getMessage(), "错误");
                                 e.printStackTrace();
                             } finally {
                                 // 恢复 UI
                                 SwingUtilities.invokeLater(() -> {
-                                    parseButton.setEnabled(true);
                                     parseButton.setText("获取失效方法");
+                                    parseButton.setEnabled(true);
                                     cancelButton.setText("取消");
                                     cancelButton.setEnabled(false);
                                 });
@@ -79,8 +80,10 @@ public class ProjectMethodManager {
                         }).start();
 
                         // 设置取消按钮可用
-                        cancelButton.setEnabled(true);
+                        parseButton.setText("读取失效方法中...");
+                        parseButton.setEnabled(false);
                         cancelButton.setText("取消");
+                        cancelButton.setEnabled(true);
                         cancelButton.addActionListener(e -> isCancelled = true);
                     }
                 }
@@ -166,7 +169,11 @@ public class ProjectMethodManager {
 
                 // 查找该方法的引用
                 Query<PsiReference> referencesQuery = ReferencesSearch.search(method, scope, false);
-                // List<PsiReference> references = (List<PsiReference>) referencesQuery.findAll();
+                List<PsiReference> references = (List<PsiReference>) referencesQuery.findAll();
+                if (!references.isEmpty()) {
+                    continue;
+                };
+                /*
                 AtomicBoolean hasReference = new AtomicBoolean(false);
                 referencesQuery.forEach(reference -> {
                     if (isCancelled) return false;
@@ -174,10 +181,12 @@ public class ProjectMethodManager {
                     return false; // 找到第一个引用即可停止
                 });
                 if (hasReference.get()) continue;
+                */
 
                 // 检查是否是接口方法的实现，并查看接口方法是否被引用
                 PsiMethod[] superMethods = method.findSuperMethods();
                 for (PsiMethod superMethod : superMethods) {
+                    /*
                     if (superMethod.getContainingClass().isInterface()) {
                         Query<PsiReference> interfaceRefQuery = ReferencesSearch.search(superMethod, scope, false);
                         List<PsiReference> interfaceRefs = (List<PsiReference>) interfaceRefQuery.findAll();
@@ -186,12 +195,11 @@ public class ProjectMethodManager {
                             return; // 跳过报告
                         }
                     }
-                    /*
+                    */
                     if (superMethod.getContainingClass().isInterface()) {
                         // 只要是接口方法的实现，就认为它是被使用的，不管有没有引用
                         return; // 跳过报告
                     }
-                    */
                 }
 
                 /*

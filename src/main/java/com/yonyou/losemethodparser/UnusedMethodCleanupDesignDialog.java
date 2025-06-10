@@ -121,8 +121,8 @@ public class UnusedMethodCleanupDesignDialog extends DialogWrapper {
         cancelButton.setEnabled(false);
         parseButton.addActionListener(e -> {
             // 禁用按钮，防止重复点击
+            parseButton.setText("编译中...");
             parseButton.setEnabled(false);
-            parseButton.setText("处理中...");
             try {
                 java.util.List<String> excludedScopes = getExcludedScopes(controllerCheckBox, dtoCheckBox, enumCheckBox, testCheckBox, deprecatedCheckBox, resourceCheckBox);
                 ProjectMethodManager.compileAndGetAllClassesAndMethods(project, parseButton, cancelButton, "获取失效方法", methodInputArea, excludedScopes);
@@ -130,8 +130,9 @@ public class UnusedMethodCleanupDesignDialog extends DialogWrapper {
                 Messages.showErrorDialog("获取失效方法失败：" + ex.getMessage(), "错误");
                 ex.printStackTrace();
                 // 恢复按钮状态
-                parseButton.setEnabled(true);
                 parseButton.setText("获取失效方法");
+                parseButton.setEnabled(true);
+                cancelButton.setEnabled(false);
             }
         });
         cancelButton.addActionListener(e -> {
