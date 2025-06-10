@@ -128,7 +128,6 @@ public class UnusedMethodCleanupDesignDialog extends DialogWrapper {
                 ProjectMethodManager.compileAndGetAllClassesAndMethods(project, parseButton, cancelButton, "获取失效方法", methodInputArea, excludedScopes);
             } catch (Exception ex) {
                 Messages.showErrorDialog("获取失效方法失败：" + ex.getMessage(), "错误");
-                ex.printStackTrace();
                 // 恢复按钮状态
                 parseButton.setText("获取失效方法");
                 parseButton.setEnabled(true);

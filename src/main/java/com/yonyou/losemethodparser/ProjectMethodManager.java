@@ -1,5 +1,6 @@
 package com.yonyou.losemethodparser;
 
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.compiler.CompileContext;
 import com.intellij.openapi.compiler.CompileStatusNotification;
 import com.intellij.openapi.compiler.CompilerManager;
@@ -40,13 +41,16 @@ public class ProjectMethodManager {
             public void finished(boolean aborted, int errors, int warnings, CompileContext compileContext) {
                 if (!aborted && errors == 0) {
                     PsiPackage rootPackage = JavaPsiFacade.getInstance(project).findPackage("");
-                    if (rootPackage != null) {
+                    if (rootPackage == null) {
+                        Messages.showErrorDialog("Root package is null, project model may be invalid", "错误");
+                    }
 
-                        // 初始化取消标志
-                        isCancelled = false;
+                    // 初始化取消标志
+                    isCancelled = false;
 
-                        // 启动后台线程处理包扫描
-                        new Thread(() -> {
+                    // 启动后台线程处理包扫描
+                    new Thread(() -> {
+                        ReadAction.run(() -> {
                             try {
                                 processPackage(excludedScopes, rootPackage, GlobalSearchScope.projectScope(project), classMethodName -> {
                                     if (isCancelled) return;
@@ -66,8 +70,10 @@ public class ProjectMethodManager {
                                 }
 
                             } catch (Exception e) {
-                                Messages.showErrorDialog("获取失效方法失败：" + e.getMessage(), "错误");
-                                e.printStackTrace();
+                                String errorMessage = "获取失效方法失败：" + e.getClass().getSimpleName() + ": " + e.getMessage();
+                                SwingUtilities.invokeLater(() -> {
+                                    Messages.showErrorDialog(errorMessage, "错误");
+                                });
                             } finally {
                                 // 恢复 UI
                                 SwingUtilities.invokeLater(() -> {
@@ -77,15 +83,15 @@ public class ProjectMethodManager {
                                     cancelButton.setEnabled(false);
                                 });
                             }
-                        }).start();
+                        });
+                    }).start();
 
-                        // 设置取消按钮可用
-                        parseButton.setText("读取失效方法中...");
-                        parseButton.setEnabled(false);
-                        cancelButton.setText("取消");
-                        cancelButton.setEnabled(true);
-                        cancelButton.addActionListener(e -> isCancelled = true);
-                    }
+                    // 设置取消按钮可用
+                    parseButton.setText("读取失效方法中...");
+                    parseButton.setEnabled(false);
+                    cancelButton.setText("取消");
+                    cancelButton.setEnabled(true);
+                    cancelButton.addActionListener(e -> isCancelled = true);
                 }
             }
         });
@@ -102,6 +108,7 @@ public class ProjectMethodManager {
         if (isCancelled) return;
         // 处理当前包中的类
         for (PsiClass psiClass : psiPackage.getClasses(scope)) {
+            if (!psiClass.isValid() || isCancelled) continue;
             String qualifiedName = psiClass.getQualifiedName();
             String pathName = qualifiedName.replace(".", "/").concat(".java");
             // 排除 test
@@ -146,23 +153,23 @@ public class ProjectMethodManager {
                 String className = psiClass.getName();
                 // 排除 DTO
                 if (excludedScopes.contains("DTO") && (
-                    className.endsWith("DTO")
-                    || className.endsWith("Dto"))
+                        className.endsWith("DTO")
+                                || className.endsWith("Dto"))
                 ) {
                     continue;
                 }
                 // 排除 Enum
                 if (excludedScopes.contains("Enum") && (
-                    className.endsWith("ENUM")
-                    || className.endsWith("Enum"))
+                        className.endsWith("ENUM")
+                                || className.endsWith("Enum"))
                 ) {
                     continue;
                 }
                 // 排除 Controller
                 if (excludedScopes.contains("Controller") && (
-                    className.endsWith("Controller")
-                    || psiClass.hasAnnotation("org.springframework.stereotype.Controller")
-                    || psiClass.hasAnnotation("org.springframework.web.bind.annotation.RestController"))
+                        className.endsWith("Controller")
+                                || psiClass.hasAnnotation("org.springframework.stereotype.Controller")
+                                || psiClass.hasAnnotation("org.springframework.web.bind.annotation.RestController"))
                 ) {
                     continue;
                 }
@@ -247,7 +254,6 @@ public class ProjectMethodManager {
                 callback.onUnusedMethodFound(classMethodName);
             }
         }
-
         // 递归处理子包
         for (PsiPackage subPackage : psiPackage.getSubPackages(scope)) {
             processPackage(excludedScopes, subPackage, scope, callback);
